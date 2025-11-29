@@ -12,6 +12,7 @@ import sendEmailRouter from './routes/sendEmail';
 import reservationEmailRouter from './routes/reservationEmail';
 import profileRouter from './routes/profile';
 import favoriteRoutes from './routes/favoriteRoutes';
+import chatbotRoutes from './routes/chatbotRoutes';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { setIO } from './utils/socket';
@@ -97,6 +98,7 @@ app.use('/api/send-email', sendEmailRouter);
 app.use('/api/reservation-email', reservationEmailRouter);
 app.use('/api/profile', profileRouter);
 app.use('/api/favorites', favoriteRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 app.use('/uploads', express.static('uploads'));
 
 // Default route
