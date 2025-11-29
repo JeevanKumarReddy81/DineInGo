@@ -120,6 +120,9 @@ const io = new Server(httpServer, {
 
 setIO(io);
 
+// Make io accessible to routes
+app.set('io', io);
+
 // Auto-confirm job: runs every minute
 setInterval(async () => {
   try {
@@ -151,7 +154,19 @@ setInterval(async () => {
 const userSockets = new Map<string, string>();
 
 io.on('connection', (socket) => {
-  console.log('New client connected');
+  console.log('New client connected:', socket.id);
+
+  // Join restaurant room for real-time table updates
+  socket.on('joinRestaurant', (restaurantId: string) => {
+    socket.join(restaurantId);
+    console.log(`Socket ${socket.id} joined restaurant room: ${restaurantId}`);
+  });
+
+  // Leave restaurant room
+  socket.on('leaveRestaurant', (restaurantId: string) => {
+    socket.leave(restaurantId);
+    console.log(`Socket ${socket.id} left restaurant room: ${restaurantId}`);
+  });
 
   socket.on('user_login', (userData) => {
     if (userData.uid) {
@@ -176,6 +191,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
     for (const [uid, socketId] of userSockets.entries()) {
       if (socketId === socket.id) {
         userSockets.delete(uid);
