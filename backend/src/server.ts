@@ -36,7 +36,7 @@ app.use(cors({
 app.use(express.json());
 
 // MongoDB Atlas connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://dineingoapp:FzyC357xJaxj6oXM@cluster0dine.sofa1gx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0dine';
+const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
   throw new Error('MONGODB_URI is not defined. Please set it in your .env file.');
@@ -168,6 +168,18 @@ io.on('connection', (socket) => {
   socket.on('leaveRestaurant', (restaurantId: string) => {
     socket.leave(restaurantId);
     console.log(`Socket ${socket.id} left restaurant room: ${restaurantId}`);
+  });
+
+  // Join event room for real-time seat updates
+  socket.on('joinEvent', (eventId: string) => {
+    socket.join(`event-${eventId}`);
+    console.log(`Socket ${socket.id} joined event room: event-${eventId}`);
+  });
+
+  // Leave event room
+  socket.on('leaveEvent', (eventId: string) => {
+    socket.leave(`event-${eventId}`);
+    console.log(`Socket ${socket.id} left event room: event-${eventId}`);
   });
 
   socket.on('user_login', (userData) => {
