@@ -17,6 +17,9 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { setIO } from './utils/socket';
 import { TableBooking } from './models/TableBooking';
+import { SlotWorker } from './services/SlotWorker';
+import slotRoutes from './routes/slotRoutes';
+import { setSocketIO } from './services/SlotService';
 import dayjs from 'dayjs';
 
 // Load environment variables
@@ -56,7 +59,7 @@ const mongooseOptions = {
 mongoose.connect(MONGODB_URI, mongooseOptions)
   .then(() => {
     console.log('Connected to MongoDB Atlas successfully');
-    
+
     // Test the connection by trying to access the database
     if (mongoose.connection.db) {
       return mongoose.connection.db.admin().ping();
@@ -65,6 +68,9 @@ mongoose.connect(MONGODB_URI, mongooseOptions)
   })
   .then(() => {
     console.log('MongoDB connection verified - Database is responsive');
+
+    // Start background workers
+    SlotWorker.start();
 
     // Start the server only after successful connection
     httpServer.listen(PORT, () => {
@@ -99,6 +105,7 @@ app.use('/api/reservation-email', reservationEmailRouter);
 app.use('/api/profile', profileRouter);
 app.use('/api/favorites', favoriteRoutes);
 app.use('/api/chatbot', chatbotRoutes);
+app.use('/api', slotRoutes);
 app.use('/uploads', express.static('uploads'));
 
 // Default route
@@ -121,6 +128,7 @@ const io = new Server(httpServer, {
 });
 
 setIO(io);
+setSocketIO(io);
 
 // Make io accessible to routes
 app.set('io', io);
@@ -180,6 +188,18 @@ io.on('connection', (socket) => {
   socket.on('leaveEvent', (eventId: string) => {
     socket.leave(`event-${eventId}`);
     console.log(`Socket ${socket.id} left event room: event-${eventId}`);
+  });
+
+  // Join slot room for real-time capacity updates
+  socket.on('joinSlot', (slotId: string) => {
+    socket.join(`slot:${slotId}`);
+    console.log(`Socket ${socket.id} joined slot room: slot:${slotId}`);
+  });
+
+  // Leave slot room
+  socket.on('leaveSlot', (slotId: string) => {
+    socket.leave(`slot:${slotId}`);
+    console.log(`Socket ${socket.id} left slot room: slot:${slotId}`);
   });
 
   socket.on('user_login', (userData) => {
