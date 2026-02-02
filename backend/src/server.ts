@@ -13,6 +13,8 @@ import reservationEmailRouter from './routes/reservationEmail';
 import profileRouter from './routes/profile';
 import favoriteRoutes from './routes/favoriteRoutes';
 import chatbotRoutes from './routes/chatbotRoutes';
+import businessRoutes from './routes/businessRoutes';
+import achievementRoutes from './routes/achievementRoutes';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { setIO } from './utils/socket';
@@ -105,6 +107,8 @@ app.use('/api/reservation-email', reservationEmailRouter);
 app.use('/api/profile', profileRouter);
 app.use('/api/favorites', favoriteRoutes);
 app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/business', businessRoutes);
+app.use('/api/achievements', achievementRoutes);
 app.use('/api', slotRoutes);
 app.use('/uploads', express.static('uploads'));
 
