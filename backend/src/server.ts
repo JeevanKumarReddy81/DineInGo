@@ -15,6 +15,7 @@ import favoriteRoutes from './routes/favoriteRoutes';
 import chatbotRoutes from './routes/chatbotRoutes';
 import businessRoutes from './routes/businessRoutes';
 import achievementRoutes from './routes/achievementRoutes';
+import passwordResetRoutes from './routes/passwordReset';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { setIO } from './utils/socket';
@@ -23,6 +24,11 @@ import { SlotWorker } from './services/SlotWorker';
 import slotRoutes from './routes/slotRoutes';
 import { setSocketIO } from './services/SlotService';
 import dayjs from 'dayjs';
+import menuRoutes from './routes/menuRoutes';
+import waitlistRoutes from './routes/waitlistRoutes';
+import preOrderRoutes from './routes/preOrderRoutes';
+import userPreferenceRoutes from './routes/userPreferenceRoutes';
+import userOtpRoutes from './routes/userOtpRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -109,7 +115,13 @@ app.use('/api/favorites', favoriteRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/business', businessRoutes);
 app.use('/api/achievements', achievementRoutes);
+app.use('/api/business/forgot-password', passwordResetRoutes);
 app.use('/api', slotRoutes);
+app.use('/api/menu', menuRoutes);
+app.use('/api/waitlist', waitlistRoutes);
+app.use('/api/preorder', preOrderRoutes);
+app.use('/api/user-preferences', userPreferenceRoutes);
+app.use('/api/auth/otp', userOtpRoutes);
 app.use('/uploads', express.static('uploads'));
 
 // Default route
@@ -204,6 +216,17 @@ io.on('connection', (socket) => {
   socket.on('leaveSlot', (slotId: string) => {
     socket.leave(`slot:${slotId}`);
     console.log(`Socket ${socket.id} left slot room: slot:${slotId}`);
+  });
+
+  // Business specific rooms
+  socket.on('join-business-room', (businessId: string) => {
+    socket.join(`business-${businessId}`);
+    console.log(`Socket ${socket.id} joined business room: business-${businessId}`);
+  });
+
+  socket.on('leave-business-room', (businessId: string) => {
+    socket.leave(`business-${businessId}`);
+    console.log(`Socket ${socket.id} left business room: business-${businessId}`);
   });
 
   socket.on('user_login', (userData) => {
