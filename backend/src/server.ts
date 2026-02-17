@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import adminRoutes from './routes/adminRoutes';
 import userRoutes from './routes/userRoutes';
 import bookingRoutes from './routes/bookingRoutes';
 import restaurantRoutes from './routes/restaurantRoutes';
@@ -16,6 +17,8 @@ import chatbotRoutes from './routes/chatbotRoutes';
 import businessRoutes from './routes/businessRoutes';
 import achievementRoutes from './routes/achievementRoutes';
 import passwordResetRoutes from './routes/passwordReset';
+import reportRoutes from './routes/reportRoutes';
+import issueReportRoutes from './routes/issueReportRoutes';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { setIO } from './utils/socket';
@@ -45,6 +48,12 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// Request timing middleware for performance monitoring
+app.use((req: any, res, next) => {
+  req.startTime = Date.now();
+  next();
+});
 
 // MongoDB Atlas connection
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -102,6 +111,8 @@ mongoose.connect(MONGODB_URI, mongooseOptions)
   });
 
 // Routes
+// Routes
+app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/restaurants', restaurantRoutes);
@@ -116,6 +127,8 @@ app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/business', businessRoutes);
 app.use('/api/achievements', achievementRoutes);
 app.use('/api/business/forgot-password', passwordResetRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/issue-reports', issueReportRoutes);
 app.use('/api', slotRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/waitlist', waitlistRoutes);
