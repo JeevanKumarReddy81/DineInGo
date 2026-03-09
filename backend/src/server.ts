@@ -19,6 +19,7 @@ import achievementRoutes from './routes/achievementRoutes';
 import passwordResetRoutes from './routes/passwordReset';
 import reportRoutes from './routes/reportRoutes';
 import issueReportRoutes from './routes/issueReportRoutes';
+import geocodingRoutes from './routes/geocodingRoutes';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { setIO } from './utils/socket';
@@ -32,6 +33,7 @@ import waitlistRoutes from './routes/waitlistRoutes';
 import preOrderRoutes from './routes/preOrderRoutes';
 import userPreferenceRoutes from './routes/userPreferenceRoutes';
 import userOtpRoutes from './routes/userOtpRoutes';
+import earlyAccessRoutes from './routes/earlyAccessRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -41,7 +43,7 @@ const PORT = process.env.PORT || 5001;
 
 // Configure CORS
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  origin: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:6173'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -129,12 +131,14 @@ app.use('/api/achievements', achievementRoutes);
 app.use('/api/business/forgot-password', passwordResetRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/issue-reports', issueReportRoutes);
+app.use('/api/geocoding', geocodingRoutes);
 app.use('/api', slotRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/waitlist', waitlistRoutes);
 app.use('/api/preorder', preOrderRoutes);
 app.use('/api/user-preferences', userPreferenceRoutes);
 app.use('/api/auth/otp', userOtpRoutes);
+app.use('/api/early-access', earlyAccessRoutes);
 app.use('/uploads', express.static('uploads'));
 
 // Default route
@@ -151,7 +155,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: ['http://localhost:5173', 'http://localhost:3000'],
+    origin: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:6173'],
     methods: ['GET', 'POST']
   }
 });
