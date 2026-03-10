@@ -35,19 +35,31 @@ import userPreferenceRoutes from './routes/userPreferenceRoutes';
 import userOtpRoutes from './routes/userOtpRoutes';
 import earlyAccessRoutes from './routes/earlyAccessRoutes';
 
+// SECURITY: Import security middleware and utilities
+import { secretManager } from './utils/secretManager';
+import { securityHeaders, customSecurityHeaders, corsConfig } from './middleware/securityHeaders';
+import { apiLimiter, authLimiter, passwordResetLimiter, otpLimiter, reviewLimiter, bookingLimiter } from './middleware/rateLimiter';
+import { handleValidationErrors } from './middleware/inputValidation';
+import securityConfig from './config/security';
+
 // Load environment variables
 dotenv.config();
+
+// SECURITY: Initialize secret manager on startup
+secretManager.initialize();
 
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// Configure CORS
-app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:6173'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// Serve static files BEFORE security headers to avoid CORS issues
+app.use('/uploads', express.static('uploads'));
+
+// SECURITY: Apply security headers middleware
+app.use(securityHeaders);
+app.use(customSecurityHeaders);
+
+// SECURITY: Configure CORS with security settings
+app.use(cors(corsConfig));
 
 app.use(express.json());
 
@@ -139,7 +151,6 @@ app.use('/api/preorder', preOrderRoutes);
 app.use('/api/user-preferences', userPreferenceRoutes);
 app.use('/api/auth/otp', userOtpRoutes);
 app.use('/api/early-access', earlyAccessRoutes);
-app.use('/uploads', express.static('uploads'));
 
 // Default route
 app.get('/', (req, res) => {
