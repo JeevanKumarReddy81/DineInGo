@@ -41,6 +41,7 @@ import { securityHeaders, customSecurityHeaders, corsConfig } from './middleware
 import { apiLimiter, authLimiter, passwordResetLimiter, otpLimiter, reviewLimiter, bookingLimiter } from './middleware/rateLimiter';
 import { handleValidationErrors } from './middleware/inputValidation';
 import securityConfig from './config/security';
+import { botFingerprintGuard, dataHarvestGuard, promptInjectionGuard } from './middleware/aiThreatGuard';
 
 // Load environment variables
 dotenv.config();
@@ -60,6 +61,10 @@ app.use(customSecurityHeaders);
 
 // SECURITY: Configure CORS with security settings
 app.use(cors(corsConfig));
+
+// AI THREAT GUARD: Block bot scrapers and data harvesters globally
+app.use(botFingerprintGuard);
+app.use(dataHarvestGuard);
 
 app.use(express.json());
 
@@ -124,33 +129,40 @@ mongoose.connect(MONGODB_URI, mongooseOptions)
     process.exit(1);
   });
 
-// Routes
-// Routes
-app.use('/api/admin', adminRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/restaurants', restaurantRoutes);
-app.use('/api/events', eventRoutes);
-app.use('/api/admin-login', adminLoginRoute);
-app.use('/api/notifications', notificationsRoute);
-app.use('/api/send-email', sendEmailRouter);
-app.use('/api/reservation-email', reservationEmailRouter);
-app.use('/api/profile', profileRouter);
-app.use('/api/favorites', favoriteRoutes);
-app.use('/api/chatbot', chatbotRoutes);
-app.use('/api/business', businessRoutes);
-app.use('/api/achievements', achievementRoutes);
-app.use('/api/business/forgot-password', passwordResetRoutes);
-app.use('/api/reports', reportRoutes);
-app.use('/api/issue-reports', issueReportRoutes);
-app.use('/api/geocoding', geocodingRoutes);
-app.use('/api', slotRoutes);
-app.use('/api/menu', menuRoutes);
-app.use('/api/waitlist', waitlistRoutes);
-app.use('/api/preorder', preOrderRoutes);
-app.use('/api/user-preferences', userPreferenceRoutes);
-app.use('/api/auth/otp', userOtpRoutes);
-app.use('/api/early-access', earlyAccessRoutes);
+import aiRecommendationRoutes from './routes/aiRecommendationRoutes';
+
+// API v1 Routes
+const apiV1Router = express.Router();
+
+apiV1Router.use('/admin', adminRoutes);
+apiV1Router.use('/users', userRoutes);
+apiV1Router.use('/bookings', bookingRoutes);
+apiV1Router.use('/restaurants', restaurantRoutes);
+apiV1Router.use('/events', eventRoutes);
+apiV1Router.use('/admin-login', adminLoginRoute);
+apiV1Router.use('/notifications', notificationsRoute);
+apiV1Router.use('/send-email', sendEmailRouter);
+apiV1Router.use('/reservation-email', reservationEmailRouter);
+apiV1Router.use('/profile', profileRouter);
+apiV1Router.use('/favorites', favoriteRoutes);
+apiV1Router.use('/chatbot', chatbotRoutes);
+apiV1Router.use('/business/forgot-password', passwordResetRoutes);
+apiV1Router.use('/business', businessRoutes);
+apiV1Router.use('/achievements', achievementRoutes);
+apiV1Router.use('/reports', reportRoutes);
+apiV1Router.use('/issue-reports', issueReportRoutes);
+apiV1Router.use('/geocoding', geocodingRoutes);
+apiV1Router.use('/', slotRoutes); // Handles /api/v1/slots etc
+apiV1Router.use('/menu', menuRoutes);
+apiV1Router.use('/waitlist', waitlistRoutes);
+apiV1Router.use('/preorder', preOrderRoutes);
+apiV1Router.use('/user-preferences', userPreferenceRoutes);
+apiV1Router.use('/auth/otp', userOtpRoutes);
+apiV1Router.use('/early-access', earlyAccessRoutes);
+apiV1Router.use('/recommendations', aiRecommendationRoutes);
+
+// Mount v1 API
+app.use('/api/v1', apiV1Router);
 
 // Default route
 app.get('/', (req, res) => {
@@ -166,7 +178,13 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:6173'],
+    origin: [
+      'http://localhost:5173', 
+      'http://localhost:3000', 
+      'http://localhost:6173',
+      process.env.FRONTEND_URL,
+      process.env.ADMIN_URL
+    ].filter(Boolean) as string[],
     methods: ['GET', 'POST']
   }
 });
