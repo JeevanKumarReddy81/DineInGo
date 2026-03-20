@@ -52,15 +52,15 @@ secretManager.initialize();
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// Serve static files BEFORE security headers to avoid CORS issues
-app.use('/uploads', express.static('uploads'));
-
 // SECURITY: Apply security headers middleware
 app.use(securityHeaders);
 app.use(customSecurityHeaders);
 
 // SECURITY: Configure CORS with security settings
 app.use(cors(corsConfig));
+
+// Serve static files AFTER security headers to ensure CORS applies to them
+app.use('/uploads', cors(corsConfig), express.static('uploads'));
 
 // AI THREAT GUARD: Block bot scrapers and data harvesters globally
 app.use(botFingerprintGuard);
