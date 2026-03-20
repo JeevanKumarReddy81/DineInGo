@@ -63,9 +63,15 @@ app.use(cors(corsConfig));
 // Serve static files AFTER security headers to ensure CORS applies to them
 app.use('/uploads', cors(corsConfig), express.static('uploads'));
 
-// AI THREAT GUARD: Block bot scrapers and data harvesters globally
-app.use(botFingerprintGuard);
-app.use(dataHarvestGuard);
+// AI THREAT GUARD: Block bot scrapers and data harvesters globally (except for diagnostics)
+app.use((req, res, next) => {
+  if (req.path.includes('/api/v1/test-email')) return next();
+  botFingerprintGuard(req, res, next);
+});
+app.use((req, res, next) => {
+  if (req.path.includes('/api/v1/test-email')) return next();
+  dataHarvestGuard(req, res, next);
+});
 
 app.use(express.json());
 
