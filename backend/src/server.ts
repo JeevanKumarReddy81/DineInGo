@@ -34,7 +34,6 @@ import preOrderRoutes from './routes/preOrderRoutes';
 import userPreferenceRoutes from './routes/userPreferenceRoutes';
 import userOtpRoutes from './routes/userOtpRoutes';
 import earlyAccessRoutes from './routes/earlyAccessRoutes';
-import testEmailRoutes from './routes/testEmail';
 
 // SECURITY: Import security middleware and utilities
 import { secretManager } from './utils/secretManager';
@@ -63,15 +62,9 @@ app.use(cors(corsConfig));
 // Serve static files AFTER security headers to ensure CORS applies to them
 app.use('/uploads', cors(corsConfig), express.static('uploads'));
 
-// AI THREAT GUARD: Block bot scrapers and data harvesters globally (except for diagnostics)
-app.use((req, res, next) => {
-  if (req.path.includes('/api/v1/test-email')) return next();
-  botFingerprintGuard(req, res, next);
-});
-app.use((req, res, next) => {
-  if (req.path.includes('/api/v1/test-email')) return next();
-  dataHarvestGuard(req, res, next);
-});
+// AI THREAT GUARD: Block bot scrapers and data harvesters globally
+app.use(botFingerprintGuard);
+app.use(dataHarvestGuard);
 
 app.use(express.json());
 
@@ -187,7 +180,6 @@ apiV1Router.use('/preorder', preOrderRoutes);
 apiV1Router.use('/user-preferences', userPreferenceRoutes);
 apiV1Router.use('/auth/otp', userOtpRoutes);
 apiV1Router.use('/early-access', earlyAccessRoutes);
-apiV1Router.use('/test-email', testEmailRoutes);
 apiV1Router.use('/recommendations', aiRecommendationRoutes);
 
 // Mount v1 API
