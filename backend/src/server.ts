@@ -34,6 +34,7 @@ import preOrderRoutes from './routes/preOrderRoutes';
 import userPreferenceRoutes from './routes/userPreferenceRoutes';
 import userOtpRoutes from './routes/userOtpRoutes';
 import earlyAccessRoutes from './routes/earlyAccessRoutes';
+import testEmailRoutes from './routes/testEmail';
 
 // SECURITY: Import security middleware and utilities
 import { secretManager } from './utils/secretManager';
@@ -180,6 +181,7 @@ apiV1Router.use('/preorder', preOrderRoutes);
 apiV1Router.use('/user-preferences', userPreferenceRoutes);
 apiV1Router.use('/auth/otp', userOtpRoutes);
 apiV1Router.use('/early-access', earlyAccessRoutes);
+apiV1Router.use('/test-email', testEmailRoutes);
 apiV1Router.use('/recommendations', aiRecommendationRoutes);
 
 // Mount v1 API
