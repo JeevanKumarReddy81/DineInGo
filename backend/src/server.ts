@@ -90,7 +90,7 @@ setSocketIO(io);
 app.set('io', io);
 
 // Request timing middleware for performance monitoring
-app.use((req: any, res, next) => {
+app.use((req: any, res: express.Response, next: express.NextFunction) => {
   req.startTime = Date.now();
   next();
 });
@@ -186,7 +186,7 @@ apiV1Router.use('/recommendations', aiRecommendationRoutes);
 app.use('/api/v1', apiV1Router);
 
 // Default route
-app.get('/', (req, res) => {
+app.get('/', (req: express.Request, res: express.Response) => {
   res.send('DineInGo API is running');
 });
 
