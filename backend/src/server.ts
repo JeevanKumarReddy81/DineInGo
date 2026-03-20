@@ -68,6 +68,27 @@ app.use(dataHarvestGuard);
 
 app.use(express.json());
 
+// Moved up for better initialization order
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: [
+      'http://localhost:5173', 
+      'http://localhost:3000', 
+      'http://localhost:6173',
+      process.env.FRONTEND_URL,
+      process.env.ADMIN_URL
+    ].filter(Boolean) as string[],
+    methods: ['GET', 'POST']
+  }
+});
+
+setIO(io);
+setSocketIO(io);
+
+// Make io accessible to routes
+app.set('io', io);
+
 // Request timing middleware for performance monitoring
 app.use((req: any, res, next) => {
   req.startTime = Date.now();
@@ -175,25 +196,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   res.status(500).json({ message: 'Something went wrong!' });
 });
 
-const httpServer = createServer(app);
-const io = new Server(httpServer, {
-  cors: {
-    origin: [
-      'http://localhost:5173', 
-      'http://localhost:3000', 
-      'http://localhost:6173',
-      process.env.FRONTEND_URL,
-      process.env.ADMIN_URL
-    ].filter(Boolean) as string[],
-    methods: ['GET', 'POST']
-  }
-});
-
-setIO(io);
-setSocketIO(io);
-
-// Make io accessible to routes
-app.set('io', io);
+// Socket initialization moved to top
 
 // Auto-confirm job: runs every minute
 setInterval(async () => {
@@ -307,8 +310,3 @@ io.on('connection', (socket) => {
     }
   });
 });
-
-// Replace app.listen with httpServer.listen
-/* httpServer.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-}); */ 
