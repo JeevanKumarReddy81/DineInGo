@@ -68,19 +68,20 @@ app.use(dataHarvestGuard);
 
 app.use(express.json());
 
-// Moved up for better initialization order
+// Initialize HTTP server
 const httpServer = createServer(app);
+
+// Start the server immediately so Render doesn't give a 502
+httpServer.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+  console.log('Attempting to connect to MongoDB Atlas...');
+});
+
+// Configure Socket.io with consolidated CORS settings
 const io = new Server(httpServer, {
-  cors: {
-    origin: [
-      'http://localhost:5173', 
-      'http://localhost:3000', 
-      'http://localhost:6173',
-      process.env.FRONTEND_URL,
-      process.env.ADMIN_URL
-    ].filter(Boolean) as string[],
-    methods: ['GET', 'POST']
-  }
+  cors: corsConfig,
+  transports: ['websocket', 'polling'], // Explicitly support both
+  allowEIO3: true // Support older socket.io clients if any
 });
 
 setIO(io);
@@ -102,9 +103,6 @@ if (!MONGODB_URI) {
   throw new Error('MONGODB_URI is not defined. Please set it in your .env file.');
 }
 
-console.log('Attempting to connect to MongoDB Atlas...');
-console.log('Using URI:', MONGODB_URI);
-
 const mongooseOptions = {
   serverApi: {
     version: '1',
@@ -113,41 +111,28 @@ const mongooseOptions = {
   }
 } as const;
 
+// Connect to MongoDB asynchronously without blocking server startup
 mongoose.connect(MONGODB_URI, mongooseOptions)
-  .then(() => {
+  .then(async () => {
     console.log('Connected to MongoDB Atlas successfully');
 
-    // Test the connection by trying to access the database
+    // Verify connection
     if (mongoose.connection.db) {
-      return mongoose.connection.db.admin().ping();
+      await mongoose.connection.db.admin().ping();
+      console.log('MongoDB connection verified - Database is responsive');
     }
-    throw new Error('Database connection not established');
-  })
-  .then(() => {
-    console.log('MongoDB connection verified - Database is responsive');
-
+    
     // Start background workers
     SlotWorker.start();
-
-    // Start the server only after successful connection
-    httpServer.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-    });
   })
   .catch((error) => {
-    console.error('MongoDB Atlas connection error details:');
-    if (error.name === 'MongoServerError') {
-      console.error(`Error Code: ${error.code}`);
-      console.error(`Error Message: ${error.errmsg || error.message}`);
-      if (error.code === 8000) {
-        console.error('Authentication failed - Please verify your username and password');
-        console.error('Make sure your MongoDB Atlas user credentials are correct');
-        console.error('Also check if your IP address is whitelisted in MongoDB Atlas');
-      }
+    console.error('CRITICAL: MongoDB Atlas connection error:');
+    if (error.name === 'MongoServerError' && error.code === 8000) {
+      console.error('Authentication failed - Please verify your username/password and IP whitelist');
     } else {
       console.error('Connection Error:', error);
     }
-    process.exit(1);
+    // We don't exit(1) here anymore to keep the server alive for heartbeats/maintenance-status
   });
 
 import aiRecommendationRoutes from './routes/aiRecommendationRoutes';
