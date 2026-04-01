@@ -1,4 +1,6 @@
 import express from 'express';
+import mongoSanitize from 'express-mongo-sanitize';
+import hpp from 'hpp';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
@@ -67,6 +69,12 @@ app.use(botFingerprintGuard);
 app.use(dataHarvestGuard);
 
 app.use(express.json());
+
+// SECURITY: Sanitize user-supplied data to prevent NoSQL operator injection
+app.use(mongoSanitize());
+
+// SECURITY: Prevent HTTP Parameter Pollution
+app.use(hpp());
 
 // Initialize HTTP server
 const httpServer = createServer(app);
