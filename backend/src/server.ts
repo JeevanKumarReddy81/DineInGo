@@ -36,6 +36,7 @@ import preOrderRoutes from './routes/preOrderRoutes';
 import userPreferenceRoutes from './routes/userPreferenceRoutes';
 import userOtpRoutes from './routes/userOtpRoutes';
 import earlyAccessRoutes from './routes/earlyAccessRoutes';
+import foodScanRoutes from './routes/foodScanRoutes';
 
 // SECURITY: Import security middleware and utilities
 import { secretManager } from './utils/secretManager';
@@ -68,7 +69,8 @@ app.use('/uploads', cors(corsConfig), express.static('uploads'));
 app.use(botFingerprintGuard);
 app.use(dataHarvestGuard);
 
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // SECURITY: Sanitize user-supplied data to prevent NoSQL operator injection
 app.use(mongoSanitize());
@@ -148,6 +150,7 @@ import aiRecommendationRoutes from './routes/aiRecommendationRoutes';
 // API v1 Routes
 const apiV1Router = express.Router();
 
+apiV1Router.use('/food-scans', foodScanRoutes);
 apiV1Router.use('/admin', adminRoutes);
 apiV1Router.use('/users', userRoutes);
 apiV1Router.use('/bookings', bookingRoutes);
