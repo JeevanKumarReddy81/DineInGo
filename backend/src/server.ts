@@ -37,6 +37,7 @@ import userPreferenceRoutes from './routes/userPreferenceRoutes';
 import userOtpRoutes from './routes/userOtpRoutes';
 import earlyAccessRoutes from './routes/earlyAccessRoutes';
 import foodScanRoutes from './routes/foodScanRoutes';
+import translationRoutes from './routes/translationRoutes';
 
 // SECURITY: Import security middleware and utilities
 import { secretManager } from './utils/secretManager';
@@ -178,6 +179,7 @@ apiV1Router.use('/profile', profileRouter);
 apiV1Router.use('/favorites', favoriteRoutes);
 apiV1Router.use('/chatbot', chatbotRoutes);
 apiV1Router.use('/business/forgot-password', passwordResetRoutes);
+apiV1Router.use('/translations', translationRoutes);
 apiV1Router.use('/business', businessRoutes);
 apiV1Router.use('/achievements', achievementRoutes);
 apiV1Router.use('/reports', reportRoutes);
