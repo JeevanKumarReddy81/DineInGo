@@ -85,8 +85,8 @@ app.use(hpp());
 const httpServer = createServer(app);
 
 // Start the server immediately so Render doesn't give a 502
-httpServer.listen(Number(PORT), '0.0.0.0', () => {
-  console.log(`Server is running on port ${PORT} (0.0.0.0)`);
+httpServer.listen(Number(PORT), () => {
+  console.log(`Server is running on port ${PORT}`);
   console.log('Attempting to connect to MongoDB Atlas...');
 });
 
@@ -202,8 +202,11 @@ app.get('/', (req: express.Request, res: express.Response) => {
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
+  console.error('GLOBAL ERROR:', err.stack);
+  res.status(err.status || 500).json({ 
+    message: process.env.NODE_ENV === 'production' ? 'Something went wrong!' : err.message,
+    stack: process.env.NODE_ENV === 'production' ? undefined : err.stack
+  });
 });
 
 // Socket initialization moved to top
