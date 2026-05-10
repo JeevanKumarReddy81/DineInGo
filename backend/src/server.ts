@@ -87,11 +87,18 @@ httpServer.listen(Number(PORT), '0.0.0.0', () => {
   console.log('Attempting to connect to MongoDB Atlas...');
 });
 
-// Configure Socket.io with consolidated CORS settings
+// Configure Socket.io with optimized settings for Render
 const io = new Server(httpServer, {
-  cors: corsConfig,
-  transports: ['websocket', 'polling'], // Explicitly support both
-  allowEIO3: true // Support older socket.io clients if any
+  cors: {
+    origin: true,
+    credentials: true,
+    methods: ['GET', 'POST']
+  },
+  allowEIO3: true,
+  transports: ['websocket', 'polling'],
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  connectTimeout: 45000
 });
 
 setIO(io);
@@ -100,9 +107,13 @@ setSocketIO(io);
 // Make io accessible to routes
 app.set('io', io);
 
-// Request timing middleware for performance monitoring
-app.use((req: any, res: express.Response, next: express.NextFunction) => {
-  req.startTime = Date.now();
+// Request logging for production debugging
+app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    console.log(`${req.method} ${req.originalUrl} ${res.statusCode} - ${duration}ms - Origin: ${req.headers.origin || 'none'}`);
+  });
   next();
 });
 
