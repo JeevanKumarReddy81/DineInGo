@@ -55,6 +55,9 @@ secretManager.initialize();
 const app = express();
 const PORT = process.env.PORT || 5001;
 
+// SECURITY: Trust proxy (required for Render/Vercel and rate-limiting)
+app.set('trust proxy', 1);
+
 // SECURITY: Apply security headers middleware
 app.use(securityHeaders);
 app.use(customSecurityHeaders);
