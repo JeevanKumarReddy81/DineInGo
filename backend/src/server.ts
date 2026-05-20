@@ -91,6 +91,22 @@ httpServer.listen(Number(PORT), () => {
   console.log('Attempting to connect to MongoDB Atlas...');
 });
 
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
+  console.error('=== UNHANDLED PROMISE REJECTION ===');
+  console.error('Reason:', reason);
+  console.error('Promise:', promise);
+  // Don't exit the process, just log the error
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error: Error) => {
+  console.error('=== UNCAUGHT EXCEPTION ===');
+  console.error('Error:', error.message);
+  console.error('Stack:', error.stack);
+  // Don't exit the process, just log the error
+});
+
 // Configure Socket.io with optimized settings for Render
 const io = new Server(httpServer, {
   cors: {
@@ -202,12 +218,32 @@ app.get('/', (req: express.Request, res: express.Response) => {
   res.send('DineInGo API is running');
 });
 
-// Error handling middleware
+// Error handling middleware - must be after all routes
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('GLOBAL ERROR:', err.stack);
+  console.error('=== GLOBAL ERROR HANDLER ===');
+  console.error('Error:', err.message);
+  console.error('Stack:', err.stack);
+  console.error('Request:', req.method, req.originalUrl);
+  console.error('Body:', req.body);
+  
+  // Ensure we haven't already sent a response
+  if (res.headersSent) {
+    console.error('Headers already sent, delegating to default error handler');
+    return next(err);
+  }
+  
   res.status(err.status || 500).json({ 
+    success: false,
     message: process.env.NODE_ENV === 'production' ? 'Something went wrong!' : err.message,
     stack: process.env.NODE_ENV === 'production' ? undefined : err.stack
+  });
+});
+
+// Handle 404 routes
+app.use((req: express.Request, res: express.Response) => {
+  res.status(404).json({
+    success: false,
+    message: 'Route not found'
   });
 });
 
