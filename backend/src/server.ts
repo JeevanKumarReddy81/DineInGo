@@ -77,7 +77,7 @@ app.use('/uploads', cors(corsConfig), express.static('uploads'));
 app.use(compression({
   threshold: 1024, // Only compress responses above 1kb
   level: 6, // Compression level (0-9)
-  filter: (req, res) => {
+  filter: (req: express.Request, res: express.Response) => {
     if (req.headers['x-no-compression']) {
       return false;
     }
