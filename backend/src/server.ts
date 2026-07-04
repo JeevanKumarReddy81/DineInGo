@@ -365,12 +365,19 @@ io.on('connection', (socket) => {
   socket.on('user_login', (userData) => {
     if (userData.uid) {
       userSockets.set(userData.uid, socket.id);
+      socket.join(`customer-${userData.uid}`);
+      console.log(`Socket ${socket.id} joined customer room: customer-${userData.uid}`);
       io.emit('user_activity', {
         type: 'login',
         user: userData,
         timestamp: new Date()
       });
     }
+  });
+
+  socket.on('joinCustomerRoom', (customerId: string) => {
+    socket.join(`customer-${customerId}`);
+    console.log(`Socket ${socket.id} joined customer room: customer-${customerId}`);
   });
 
   socket.on('user_logout', (userData) => {
